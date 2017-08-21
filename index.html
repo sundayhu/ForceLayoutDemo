@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8" />
+		<title>力导向布局</title>
+		<script src="d3.min.js" type="text/javascript"></script>
+		<style type="text/css">
+			#tooltip 
+		{      
+			position: relative;
+			overflow: scroll;  
+			width: 40%;
+			height: 500px;
+			float:right;
+			padding: 10px;
+			margin:10px;
+			background-color: white;
+			border-radius: 10px;
+			-webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4); 
+			-moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4); 
+			box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);     
+		}
+		
+		#tooltip p 
+		{
+		    margin: 0;
+		    font-family: sans-serif;
+		    font-size: 18px;
+		    line-height:22px;
+		}
+		#message:hover   {color:blue;}
+		#title{
+				color:orangered;
+				font-family: castellar;
+				font-size: 30pt;
+			}
+		</style>
+	</head>
+
+	<body>
+	<div id="tooltip" class="hidden">
+	<p><strong id="title">Detail</strong></p>   
+	<p><span id="message"></span></p>
+	</div>
+		<script>
+			var c = d3.scale.category20();//颜色比例尺
+			d3.json("data-3.json", function(jsondata) {
+				var nodes = jsondata["nodes"];
+				var links = jsondata["links"];
+				var w = 700,
+					h = 700;
+				var svg = d3.select('body').append('svg').attr('width', w).attr('height', h);
+				//绘图
+				var force = d3.layout.force()
+					.nodes(nodes)
+					.links(links)
+					.size([w, h])
+					.linkDistance([100])
+					.charge([-150])
+					.start();
+				//绘线
+				var link = svg.selectAll("line")
+					.data(links)
+					.enter()
+					.append("line")
+					.style("stroke", "#ccc")
+					.style("stroke-width", function(d) {
+						return d.value / 2;
+					});
+				//绘点
+				var node = svg.selectAll("circle")
+					.data(nodes)
+					.enter()
+					.append("circle")
+					.attr("r", '5')
+					.style("fill", function(d) {
+						return c(d.group);
+					})
+					.on("click", function(d) {
+						var name=d.name,group=d.group;
+						var parent = d3.select("#message")
+						
+						parent.selectAll("div").remove();//移除
+							
+						parent
+			                  .append("div")
+			                  .text(function(d)
+			                  {
+			                  	return "name:"+name;
+			                  });
+			            parent.append("div")
+			                  .text(function(d){
+			                  	return "group:"+group;
+			                  });
+			       
+					})
+					.call(force.drag); 
+					//鼠标悬停
+					node.append("title")
+					.text(function(d)
+					{
+						return d.name;
+					});
+					//打点
+				force.on("tick", function() {
+					link.attr("x1", function(d) {
+							return d.source.x;
+						})
+						.attr("y1", function(d) {
+							return d.source.y;
+						})
+						.attr("x2", function(d) {
+							return d.target.x;
+						})
+						.attr("y2", function(d) {
+							return d.target.y;
+						});
+					node.attr("cx", function(d) {
+							return d.x;
+						})
+						.attr("cy", function(d) {
+							return d.y;
+						});
+				});
+			})
+		</script>
+	</body>
+
+</html>
